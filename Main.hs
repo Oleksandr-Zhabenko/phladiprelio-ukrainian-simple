@@ -29,112 +29,117 @@ import GHC.Real ((/),quot,gcd)
 import Phladiprelio.Ukrainian.Syllable 
 import Phladiprelio.Ukrainian.SyllableDouble
 import Phladiprelio.Ukrainian.ReadDurations
+import Data.ChooseLine
 
 main :: IO ()
 main = do
   args0 <- getArgs
   let (argCBs, args) = parseHelp args0
       (argsA, argsB, argsC, arg2s) = args2Args31R ('+','-') (aSpecs `mappend` bSpecs `mappend` cSpecs) args
-      fileDu = concat . getB "+d" $ argsB
-      sylD = let k = snd (fromMaybe 2 (readMaybe (concat . getB "+s" $ argsB)::Maybe Int) `quotRemInt` 4) in if k == 0 then 4 else k
-  syllableDurationsDs <- readSyllableDurations fileDu
-  let maxNumWords = let k = fromMaybe 7 (readMaybe (concat . getB "+x" $ argsB)::Maybe Int) in if k == 0 || abs k >= 9 then 9 else max (abs k) 2
-      hc = R.readHashCorrections . concat . getB "+c" $ argsB
-      dcspecs = getB "+dc" argsB
-      power10' = fromMaybe 4 (readMaybe (concat . getB "+q" $ argsB)::Maybe Int)
-      power10 
-         | power10' < 2 && power10' > 6 = 4
-         | otherwise = power10'
-      (html,dcfile) 
-        | null dcspecs = (False, "")
-        | otherwise = (head dcspecs == "1",last dcspecs)
-      prepare = oneA "-p" argsA
-      selStr = concat . getB "+ul" $ argsB
-      grpp = R.grouppingR . concat . getB "+r" $ argsB
-      splitting = fromMaybe 50 (readMaybe (concat . getB "+w" $ argsB)::Maybe Int8)
-      emptyline = oneA "+l" argsA
-      numTest = fromMaybe 1 (readMaybe (concat . getB "-t" $ argsB)::Maybe Int)
-      hashStep = fromMaybe 20 (readMaybe (concat . getB "+k" $ argsB)::Maybe Int)
-      helpMessage = any (== "-h") args0
-      helpArg = concat . getB "-h" $ argsB
-      filedata = getB "+f" argsB
-      concurrently = oneA "-C" argsA
-      (multiline2, multiline2LineNum) 
-        | oneB "+m3" argsB = 
-            let r1ss = getB "+m3" argsB in 
-                  if length r1ss == 3 
-                      then let (kss,qss) = splitAt 2 r1ss in 
-                                   (kss, max 1 (fromMaybe 1 (readMaybe (concat qss)::Maybe Int))) 
-                      else (r1ss, 1)
-        | oneB "+m2" argsB = (getB "+m" argsB,  max 1 (fromMaybe 1 (readMaybe (concat . getB "+m2" $ argsB)::Maybe Int)))
-        | otherwise = (getB "+m" argsB, -1)
-      (fileread,lineNmb)
-        | null multiline2 = ("",-1)
-        | length multiline2 == 2 = (head multiline2, fromMaybe 1 (readMaybe (last multiline2)::Maybe Int))
-        | otherwise = (head multiline2, 1)
-  (arg3s,prestr,poststr,linecomp3) <- do 
-       if lineNmb /= -1 then do
-           txtFromFile <- readFile fileread
-           let lns = lines txtFromFile
-               ll1 = length lns
-               ln0 = max 1 (min lineNmb (length lns))
-               lm3 
-                 | multiline2LineNum < 1 = -1
-                 | otherwise = max 1 . min multiline2LineNum $ ll1
-               linecomp3 
-                 | lm3 == -1 = []
-                 | otherwise = lns !! (lm3 - 1)
-               ln_1 
-                  | ln0 == 1 = 0
-                  | otherwise = ln0 - 1
-               ln1
-                  | ln0 == length lns = 0
-                  | otherwise = ln0 + 1
-               lineF = lns !! (ln0 - 1)
-               line_1F 
-                  | ln_1 == 0 = []
-                  | otherwise = lns !! (ln_1 - 1)
-               line1F
-                  | ln1 == 0 = []
-                  | otherwise = lns !! (ln1 - 1)
-           return $ (words lineF, line_1F,line1F,linecomp3)
-       else return (arg2s, [], [],[])
-  let line2comparewith 
-        | oneC "+l2" argsC || null linecomp3 = unwords . getC "+l2" $ argsC
-        | otherwise = linecomp3
-      basecomp = read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
-                         else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) line2comparewith
-
-      example = read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
-                         else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) (unwords arg3s)
-      le = length example
-      lb = length basecomp
-      gcd1 = gcd le lb
-      ldc = (le * lb) `quot` gcd1
-      mulp = ldc `quot` lb
-      max2 = maximum basecomp
-      compards = concatMap (replicate mulp . (/ max2)) basecomp
-      (filesave,codesave)  
-        | null filedata = ("",-1)
-        | length filedata == 2 = (head filedata, fromMaybe 0 (readMaybe (last filedata)::Maybe Int))
-        | otherwise = (head filedata,0)
-      ll = take maxNumWords . (if prepare then id else words . mconcat . prepareTextN3 maxNumWords . unwords) $ arg3s
-      l = length ll
-      argCs = catMaybes (fmap (readMaybeECG l) . getC "+a" $ argsC)
-      !perms 
-        | not (null argCBs) = filterGeneralConv l argCBs . genPermutationsL $ l
-        | null argCs = genPermutationsL l
-        | otherwise = decodeLConstraints argCs . genPermutationsL $ l 
-      descending = oneA "+n" argsA
-      variants1 = uniquenessVariants2GNBL ' ' id id id perms ll
-  if helpMessage then do 
-    hSetNewlineMode stdout universalNewlineMode
-    helpPrint helpArg
-  else generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb fileDu numTest hc grpp sylD descending hashStep emptyline splitting (filesave, codesave) concurrently (unwords arg3s) variants1 >> return ()
+      compareByLinesFinalFile = concat . getB "-cm" $ argsB
+  if not . null $ compareByLinesFinalFile then do
+    compareFilesToOneCommon 14 arg2s compareByLinesFinalFile
+  else do
+    let fileDu = concat . getB "+d" $ argsB
+        sylD = let k = snd (fromMaybe 2 (readMaybe (concat . getB "+s" $ argsB)::Maybe Int) `quotRemInt` 4) in if k == 0 then 4 else k
+    syllableDurationsDs <- readSyllableDurations fileDu
+    let maxNumWords = let k = fromMaybe 7 (readMaybe (concat . getB "+x" $ argsB)::Maybe Int) in if k == 0 || abs k >= 9 then 9 else max (abs k) 2
+        hc = R.readHashCorrections . concat . getB "+c" $ argsB
+        dcspecs = getB "+dc" argsB
+        power10' = fromMaybe 4 (readMaybe (concat . getB "+q" $ argsB)::Maybe Int)
+        power10 
+           | power10' < 2 && power10' > 6 = 4
+           | otherwise = power10'
+        (html,dcfile) 
+          | null dcspecs = (False, "")
+          | otherwise = (head dcspecs == "1",last dcspecs)
+        prepare = oneA "-p" argsA
+        selStr = concat . getB "+ul" $ argsB
+        grpp = R.grouppingR . concat . getB "+r" $ argsB
+        splitting = fromMaybe 50 (readMaybe (concat . getB "+w" $ argsB)::Maybe Int8)
+        emptyline = oneA "+l" argsA
+        numTest = fromMaybe 1 (readMaybe (concat . getB "-t" $ argsB)::Maybe Int)
+        hashStep = fromMaybe 20 (readMaybe (concat . getB "+k" $ argsB)::Maybe Int)
+        helpMessage = any (== "-h") args0
+        helpArg = concat . getB "-h" $ argsB
+        filedata = getB "+f" argsB
+        concurrently = oneA "-C" argsA
+        (multiline2, multiline2LineNum) 
+          | oneB "+m3" argsB = 
+              let r1ss = getB "+m3" argsB in 
+                    if length r1ss == 3 
+                        then let (kss,qss) = splitAt 2 r1ss in 
+                                     (kss, max 1 (fromMaybe 1 (readMaybe (concat qss)::Maybe Int))) 
+                        else (r1ss, 1)
+          | oneB "+m2" argsB = (getB "+m" argsB,  max 1 (fromMaybe 1 (readMaybe (concat . getB "+m2" $ argsB)::Maybe Int)))
+          | otherwise = (getB "+m" argsB, -1)
+        (fileread,lineNmb)
+          | null multiline2 = ("",-1)
+          | length multiline2 == 2 = (head multiline2, fromMaybe 1 (readMaybe (last multiline2)::Maybe Int))
+          | otherwise = (head multiline2, 1)
+    (arg3s,prestr,poststr,linecomp3) <- do 
+         if lineNmb /= -1 then do
+             txtFromFile <- readFile fileread
+             let lns = lines txtFromFile
+                 ll1 = length lns
+                 ln0 = max 1 (min lineNmb (length lns))
+                 lm3 
+                   | multiline2LineNum < 1 = -1
+                   | otherwise = max 1 . min multiline2LineNum $ ll1
+                 linecomp3 
+                   | lm3 == -1 = []
+                   | otherwise = lns !! (lm3 - 1)
+                 ln_1 
+                    | ln0 == 1 = 0
+                    | otherwise = ln0 - 1
+                 ln1
+                    | ln0 == length lns = 0
+                    | otherwise = ln0 + 1
+                 lineF = lns !! (ln0 - 1)
+                 line_1F 
+                    | ln_1 == 0 = []
+                    | otherwise = lns !! (ln_1 - 1)
+                 line1F
+                    | ln1 == 0 = []
+                    | otherwise = lns !! (ln1 - 1)
+             return $ (words lineF, line_1F,line1F,linecomp3)
+         else return (arg2s, [], [],[])
+    let line2comparewith 
+          | oneC "+l2" argsC || null linecomp3 = unwords . getC "+l2" $ argsC
+          | otherwise = linecomp3
+        basecomp = read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
+                           else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) line2comparewith
+ 
+        example = read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
+                           else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) (unwords arg3s)
+        le = length example
+        lb = length basecomp
+        gcd1 = gcd le lb
+        ldc = (le * lb) `quot` gcd1
+        mulp = ldc `quot` lb
+        max2 = maximum basecomp
+        compards = concatMap (replicate mulp . (/ max2)) basecomp
+        (filesave,codesave)  
+          | null filedata = ("",-1)
+          | length filedata == 2 = (head filedata, fromMaybe 0 (readMaybe (last filedata)::Maybe Int))
+          | otherwise = (head filedata,0)
+        ll = take maxNumWords . (if prepare then id else words . mconcat . prepareTextN3 maxNumWords . unwords) $ arg3s
+        l = length ll
+        argCs = catMaybes (fmap (readMaybeECG l) . getC "+a" $ argsC)
+        !perms 
+          | not (null argCBs) = filterGeneralConv l argCBs . genPermutationsL $ l
+          | null argCs = genPermutationsL l
+          | otherwise = decodeLConstraints argCs . genPermutationsL $ l 
+        descending = oneA "+n" argsA
+        variants1 = uniquenessVariants2GNBL ' ' id id id perms ll
+    if helpMessage then do 
+      hSetNewlineMode stdout universalNewlineMode
+      helpPrint helpArg
+    else generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb fileDu numTest hc grpp sylD descending hashStep emptyline splitting (filesave, codesave) concurrently (unwords arg3s) variants1 >> return ()
 
 
 bSpecs :: CLSpecifications
-bSpecs = (zip ["+c","+d","+k","-h","+r","+s","-t","+ul","+w","+x","+q","+m2"] . cycle $ [1]) `mappend` [("+f",2),("+m",2),("+dc",2),("+m3",3)] 
+bSpecs = (zip ["+c","+d","+k","-h","+r","+s","-t","+ul","+w","+x","+q","+m2","-cm"] . cycle $ [1]) `mappend` [("+f",2),("+m",2),("+dc",2),("+m3",3)] 
 
 aSpecs :: CLSpecifications
 aSpecs = zip ["+l", "+n","-p", "-C"] . cycle $ [0]
@@ -151,6 +156,7 @@ helpPrint xs
   | xs == "4" = putStrLn "phladiprelioUkr [[+a <PhLADiPreLiO constraints> -a] [+b <extended algebraic PhLADiPreLiO constraints> -b] [+n] [+l] [+d <FilePath to file with durations>] [+s <syllable durations function number>] [-p] [+w <splitting parameter>] [+q <power of 10 for multiplier in [2..6]>] [+f <FilePath to the file to be appended the resulting String> <control parameter for output parts>] [+x <maximum number of words taken>] [+dc <whether to print <br> tag at the end of each line for two-column output> <FilePath to the file where the two-column output will be written in addition to stdout>] [+l2 <a Ukrainian text line to compare similarity with> -l2]] <Ukrainian textual line>\n"
   | xs == "5" = putStrLn "phladiprelioUkr [[+a <PhLADiPreLiO constraints> -a] [+b <extended algebraic PhLADiPreLiO constraints> -b] [+n] [+l] [+d <FilePath to file with durations>] [+s <syllable durations function number>] [-p] [+w <splitting parameter>] [+q <power of 10 for multiplier in [2..6]>] [+f <FilePath to the file to be appended the resulting String> <control parameter for output parts>] [+x <maximum number of words taken>] [+dc <whether to print <br> tag at the end of each line for two-column output> <FilePath to the file where the two-column output will be written in addition to stdout>] [+m <FilePath> <num1> +m2 <num2>]]\n"
   | xs == "6" = putStrLn "phladiprelioUkr [[+a <PhLADiPreLiO constraints> -a] [+b <extended algebraic PhLADiPreLiO constraints> -b] [+n] [+l] [+d <FilePath to file with durations>] [+s <syllable durations function number>] [-p] [+w <splitting parameter>] [+q <power of 10 for multiplier in [2..6]>] [+f <FilePath to the file to be appended the resulting String> <control parameter for output parts>] [+x <maximum number of words taken>] [+dc <whether to print <br> tag at the end of each line for two-column output> <FilePath to the file where the two-column output will be written in addition to stdout>] [+m3 <FilePath> <num1> <num2>]]\n"
+  | xs == "7" = putStrLn "phladiprelioUkr [-cm <FilePath to write the resulting combined output to> <FilePaths of the files to be compared and chosen the resulting options line-by-line>]\n"
   | xs == "OR" = putStrLn "OR:"
   | xs == "n" = putStrLn "+n \t— if specified then the order of sorting and printing is descending (the reverse one to the default otherwise). \n"
   | xs == "l" = putStrLn "+l \t— if specified then the output for one property (no tests) contains empty lines between the groups of the line option with the same value of property. \n"
@@ -172,10 +178,12 @@ helpPrint xs
   | xs == "k" = putStrLn "+k \t— and then the number greater than 2 (better, greater than 12, the default value if not specified is 20). The greater value leads to greater numbers. The number less than some infimum here leads to wiping of some information from the result and, therefore, probably is not the desired behaviour. For most cases the default value is just enough sensible, but you can give it a try for other values.\n"
   | xs == "x" = putStrLn "+x \t— If specified with the further natural number then means that instead of maximum 7 words or their concatenations that can be analysed together as a line there will be taken the specified number here or 9 if the number is greater than 8. More words leads to more computations, therefore, please, use with this caution in mind. It can be useful mostly for the cases with the additional constraints specified (+a ... -a or +b ... -b groups, see above).\n"
   | xs == "m" = putStrLn "+m \t— If present followed with two arguments — the name of the file to be used for reading data for multiline processment and the second one — the number of line to be processed. The numeration of the lines in the file for the phladiprelioUkr program here starts from 1 (so, it is: 1, 2, 3, 4,.. etc). The program then uses instead of text the specified line from the file specified here and prints information about its previous and next lines (if available).\n"
-  | xs == "m2" || xs == "m3" = putStrLn "+m2 \t— If present, it means that the line with the corresponding number specified here will be taken from the same file specified as +m <file>. For example, the entry +m <file> 1 +m2 4 means that 1 line will be taken from the file <file> for the similarity analysis and it will be compared not with contents of +l2 ... -l2, but with the 4th line from the same file. \nThe abbreviation for +m <file> <num1> +m2 <num2> is +m3 <file> <num1> <num2>, which has the same meaning but a slightly shorter entry. \nIf <num1> == <num2>, then there is at least one of all the options with a property value of 0. \nYou can also use the \"music\" mode, which allows you to write better lyrics and music. To do this, you can add a record of the form _{set of digits} or ={set of digits} to a word or between syllables after the needed to be referred to, and this set of digits will be converted to a positive double-precision number by the program so that the first digit in the record is a whole number and the rest is a fraction (mantissa). \nIf you have added _{set of digits} then this number will be multiplied by the duration of the syllable to which this insertion refers, and the resulting number will be placed among the others in the place where this entry is inserted. \nIf you have added ={a set of digits} then this number will also be multiplied by the duration of the syllable to which this insertion refers, and the resulting number will be placed instead the duration that it was multiplied by. This allows to make syllables longer or shorter to follow language or creative intentions and rules (e. g. in French there have been noticed that the duration of the last syllable in the word, especially in the sentence or phrase is prolonged to some extent, so you can use '=12' or '=13' or '=14'  here). Not as for the _{set of digits} group, you can place it only after the syllable and only once to change the duration of the syllable. If you use this option, the following _{set of digits} will be referred to the new changed duration here, so that \"так\"=2_05_1 will mean that you will use instead of the usual duration of the syllable \"так\" the twice as much duration, and then half of this twice as much (therefore, equal to duration of the syllable without altering) and then again the twice as much duration etc. The insertion of =1, =10, =100, =1000 etc will not change anything at all, except for the time of computations (you probably do not need this). \nThese two additional possibilities allows you to change rhythmic structures, and interpret this insert as a musical pause or, conversely, a musical phrase inserted to change the rhythm. What syllable does this insertion refer to? It refers to the previous syllable in the line. There can be several such inserts, their number is not limited by the program itself (in the program code), but a significant number of inserts can significantly increase the duration of the calculation. \n\nWhen the results of the program are displayed on the screen, these inserts will also be displayed in the appropriate places. \n\nIf you specify _1, _10, _100, _1000, etc. as such an insertion, the program will assume that this insertion duration is equal to the duration of the syllable to which it refers. If the set of digits is preceded by a 0, the insertion has a shorter duration, if the 1 in the first 4 examples above is followed by digits other than 0, or if another digit is used instead of 1 or 0, the insertion has a longer duration. For example, _05 means exactly half the duration of the syllable, and _2 means double the duration.\n\nFor the \"music\" mode the number of syllables printed for the line does include the inserts (since the version 0.15.2.0)."
+  | xs == "m2" || xs == "m3" = putStrLn "+m2 \t— If present, it means that the line with the corresponding number specified here will be taken from the same file specified as +m <file>. For example, the entry +m <file> 1 +m2 4 means that 1 line will be taken from the file <file> for the similarity analysis and it will be compared not with contents of +l2 ... -l2, but with the 4th line from the same file. \nThe abbreviation for +m <file> <num1> +m2 <num2> is +m3 <file> <num1> <num2>, which has the same meaning but a slightly shorter entry. \nIf <num1> == <num2>, then there is at least one of all the options with a property value of 0. \nYou can also use the \"music\" mode, which allows you to write better lyrics and music. To do this, you can add a record of the form _{set of digits} or ={set of digits} to a word or between syllables after the needed to be referred to, and this set of digits will be converted to a positive double-precision number by the program so that the first digit in the record is a whole number and the rest is a fraction (mantissa). \nIf you have added _{set of digits} then this number will be multiplied by the duration of the syllable to which this insertion refers, and the resulting number will be placed among the others in the place where this entry is inserted. \nIf you have added ={a set of digits} then this number will also be multiplied by the duration of the syllable to which this insertion refers, and the resulting number will be placed instead the duration that it was multiplied by. This allows to make syllables longer or shorter to follow language or creative intentions and rules (e. g. in French there have been noticed that the duration of the last syllable in the word, especially in the sentence or phrase is prolonged to some extent, so you can use '=12' or '=13' or '=14'  here). Not as for the _{set of digits} group, you can place it only after the syllable and only once to change the duration of the syllable. If you use this option, the following _{set of digits} will be referred to the new changed duration here, so that \"так\"=2_05_1 will mean that you will use instead of the usual duration of the syllable \"так\" the twice as much duration, and then half of this twice as much (therefore, equal to duration of the syllable without altering) and then again the twice as much duration etc. The insertion of =1, =10, =100, =1000 etc will not change anything at all, except for the time of computations (you probably do not need this). \nThese two additional possibilities allows you to change rhythmic structures, and interpret this insert as a musical pause or, conversely, a musical phrase inserted to change the rhythm. What syllable does this insertion refer to? It refers to the previous syllable in the line. There can be several such inserts, their number is not limited by the program itself (in the program code), but a significant number of inserts can significantly increase the duration of the calculation. \n\nWhen the results of the program are displayed on the screen, these inserts will also be displayed in the appropriate places. \n\nIf you specify _1, _10, _100, _1000, etc. as such an insertion, the program will assume that this insertion duration is equal to the duration of the syllable to which it refers. If the set of digits is preceded by a 0, the insertion has a shorter duration, if the 1 in the first 4 examples above is followed by digits other than 0, or if another digit is used instead of 1 or 0, the insertion has a longer duration. For example, _05 means exactly half the duration of the syllable, and _2 means double the duration.\n\nFor the \"music\" mode the number of syllables printed for the line does include the inserts (since the version 0.15.2.0).\n"
+  | xs == "cm" = putStrLn "-cm \t— If present, the program works in a special comparative mode reading information from the several files line-by-line and prompting to choose the resulting option from the files given. If some files do not have such lines, then the resulting option for the file is empty. You choose the resulting option by typing its number on the terminal. In the version 0.16.0.0 the total number of sources is limited to no more than 14. For more information, please refer to the link: https://oleksandr-zhabenko.github.io/uk/rhythmicity/PhLADiPreLiO.Eng.21.html#comparative-mode-of-operation-c "
   | otherwise = helpFE xs
     where helpFE xs = mapM helpPrint js >> return ()
-          js 
+          js
+            | xs == "-cm" = ["0","7","cm"] 
             | xs == "+n" = ["0","1","OR","2","OR","3","OR","4","OR","5","OR","6","n"] 
             | xs == "+l" = ["0","1","OR","2","OR","3","OR","4","OR","5","OR","6","l"] 
             | xs == "+w" = ["0","1","OR","2","OR","3","OR","4","OR","5","OR","6","w"] 
@@ -198,4 +206,5 @@ helpPrint xs
             | xs == "+m" = ["0","5","m"] 
             | xs == "+m2" = ["0","5","m2"] 
             | xs == "+m3" = ["0","6","m3"] 
-            | otherwise = ["0","1","OR","2","OR","3","OR","4","OR","5","OR","6","n","l","w","s","d","p","f","dc","a","b","l2","q","ul","r","c","t","C","k","x","m","m2"]
+            | otherwise = ["0","1","OR","2","OR","3","OR","4","OR","5","OR","6","OR","7","n","l","w","s","d","p","f","dc","a","b","l2","q","ul","r","c","t","C","k","x","m","m2","cm"]
+

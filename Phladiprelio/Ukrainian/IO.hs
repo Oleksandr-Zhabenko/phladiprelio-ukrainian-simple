@@ -1,25 +1,24 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables #-}
 
 module Phladiprelio.Ukrainian.IO where
 
 import GHC.Arr
 import GHC.Base 
 import GHC.Num (Num(..),Integer,(+),(-),(*))
-import GHC.Real (Integral(..),fromIntegral,(/),quot,rem,quotRem,round,(^))
-import GHC.Enum (fromEnum,toEnum)
+import GHC.Real (Integral(..),fromIntegral,(/),rem,quotRem,round,(^))
+import GHC.Enum (fromEnum)
 import Text.Show (Show(..))
 import Text.Read (readMaybe)
-import Data.Char (isDigit, isAlpha,toLower,isSpace)
-import System.IO (putStrLn, FilePath,stdout,hSetNewlineMode,universalNewlineMode,getLine,appendFile,print,writeFile)
-import qualified Rhythmicity.MarkerSeqs as R hiding (id)
+import Data.Char (isDigit,toLower,isSpace)
+import System.IO (putStrLn, FilePath,stdout,hSetNewlineMode,universalNewlineMode,getLine,appendFile,writeFile,putStr,readFile)
+import qualified Rhythmicity.MarkerSeqs as R --hiding (id)
 import Data.List hiding (foldr)
-import Data.Foldable (Foldable)
-import Data.Maybe (isNothing,fromJust) 
+import Data.Foldable (mapM_)
+import Data.Maybe (isNothing,fromJust,fromMaybe) 
 import Data.Tuple (fst,snd)
 import Phladiprelio.Ukrainian.Syllable 
 import Phladiprelio.Ukrainian.SyllableDouble
 import Phladiprelio.Ukrainian.Melodics 
-import Control.Monad (sequence) 
 import GHC.Int (Int8)
 import CaseBi.Arr (getBFst')
 import Phladiprelio.Ukrainian.ReadDurations
@@ -34,6 +33,7 @@ import Data.MinMax1
 import Phladiprelio.General.Datatype3 
 import Phladiprelio.General.Distance
 import Phladiprelio.UniquenessPeriodsG
+import Control.Exception
 
 generalF
  :: Int -- ^ A power of 10. 10 in this power is then multiplied the value of distance if the next ['Double'] argument is not empty. The default one is 4. The right values are in the range [2..6].
@@ -58,7 +58,7 @@ generalF
  -> String -- ^ An initial string to be analysed.
  -> [String] 
  -> IO [String]
-generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb file numTest hc (grps,mxms) k descending hashStep emptyline splitting (fs,code) concurrently initstr universalSet@(u1:u2:us) = do
+generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb file numTest hc (grps,mxms) k descending hashStep emptyline splitting (fs,code) concurrently initstr universalSet@(_:_:_) = do
    syllableDurationsDs <- readSyllableDurations file
    let syllN = countSyll initstr
 --       universalSet = map unwords . permutations . words $ rs
@@ -72,7 +72,20 @@ generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb file 
                    (let h1 = if descending then (\(u,w) -> ((-1) * u, w)) else id in sortOn h1) . map (\xss -> (f ldc compards syllableDurationsDs grps mxms xss, xss)) $ universalSet
             strOutput = (:[]) . halfsplit1G (\(S _ y _) -> y) (if html then "<br>" else "") (jjj splitting) $ sRepresent
                         in do
-                             _ <- (if null dcfile then mapM putStrLn strOutput else do {mapM putStrLn strOutput >> doesFileExist dcfile >>= \exist -> if exist then do {getPermissions dcfile >>= \perms -> if writable perms then mapM (writeFile dcfile) strOutput else error $ "Phladiprelio.Ukrainian.IO.generalF: File " `mappend` dcfile `mappend` " is not writable!"} else do {getCurrentDirectory >>= \currdir -> do {getPermissions currdir >>= \perms -> if writable perms then mapM (writeFile dcfile) strOutput else error $ "Phladiprelio.Ukrainian.IO.generalF: Directory of the file " `mappend` dcfile `mappend` " is not writable!"}}})
+                             let lns1 = unlines strOutput
+                             putStrLn lns1
+                             if null dcfile then putStr "" 
+                                            else do 
+                                                exist <- doesFileExist dcfile 
+                                                if exist then do 
+                                                             perms <- getPermissions dcfile 
+                                                             if writable perms then writeFile dcfile lns1 
+                                                                               else error $ "Phladiprelio.Ukrainian.IO.generalF: File " `mappend` dcfile `mappend` " is not writable!"
+                                                         else do 
+                                                             currdir <- getCurrentDirectory
+                                                             perms <- getPermissions currdir
+                                                             if writable perms then writeFile dcfile lns1 
+                                                                               else error $ "Phladiprelio.Ukrainian.IO.generalF: Directory of the file " `mappend` dcfile `mappend` " is not writable!"
                              let l1 = length sRepresent
                              if code == -1 
                                  then if lineNmb == -1 then return strOutput
@@ -94,8 +107,12 @@ generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb file 
                   | r1 == 1 || r1 == 3 = 10*q1 + (if emptyline then 5 else r1)
                   | r1 < 0 = -10*q1 + (if emptyline then -4 else r1)
                   | otherwise = 10*q1 + (if emptyline then 4 else r1)
-generalF _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ [u1] = mapM putStrLn [u1] >> return [u1]
-generalF _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = let strOutput = ["You have specified the data and constraints on it that lead to no further possible options.", "Please, specify another data and constraints."] in mapM putStrLn strOutput >> return strOutput
+generalF _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ [u1] = do
+      putStrLn u1
+      return [u1]
+generalF _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = let strOutput = ["You have specified the data and constraints on it that lead to no further possible options.", "Please, specify another data and constraints."] in do 
+    putStrLn . unlines $ strOutput
+    return strOutput
 
 data PhladiprelioUkr = S Int Integer String deriving Eq
 
@@ -140,7 +157,7 @@ parseLineNumber l1 = do
 selectSounds :: String -> FlowSound
 selectSounds = f . sort . filter (/= 101) . concatMap g . words . map (\c -> if c  == '.' then ' ' else toLower c)
     where g = getBFst' ([101::Sound8], listArray (0,41) (("1",[1,2,3,4,5,6,7,8,10,15,17,19,21,23,25,27,28,30,32,34,36,38,39,41,43,45,47,49,50,52,54,66]):("sr",[27,28,30,32,34,36]):("vd",[8,10,15,17,19,21,23,25]) :("vs",[45,47,49,50,43,52,38,66,54,39,41]) :("vw",[1..6]) :map (\(k,t) -> (k,[t])) [("\1072",1),("\1073",15),("\1074",36),("\1075",21),("\1076",17),("\1076\1078",23),("\1076\1079",8),("\1077",2),("\1078",10),("\1079",25),("\1080",5),("\1081",27),("\1082",45),("\1083",28),("\1084",30),("\1085",32),("\1086",3),("\1087",47),("\1088",34),("\1089",49),("\1089\1100",54),("\1090",50),("\1091",4),("\1092",43),("\1093",52),("\1094",38),("\1094\1100",66),("\1095",39),("\1096",41),("\1097",55),("\1100",7),("\1102",56),("\1103",57),("\1108",58),("\1110",6),("\1111",59),("\1169",19),("\8217",61)]))
-          f (x:ts@(y:xs)) 
+          f (x:ts@(y:_)) 
             | x == y = f ts
             | otherwise = x:f ts
           f xs = xs
@@ -188,9 +205,9 @@ outputWithFile selStr compards sRepresent file syllableDurationsDs code grps k f
   | otherwise = appendF outputS
            where mBool = null selStr && null compards 
                  appendF = appendFile fs
-                 lineOption = head . filter (\(S k _ ts) -> k == num) $ sRepresent
+                 lineOption = head . filter (\(S k _ _) -> k == num) $ sRepresent
                  textP = (\(S _ _ ts) -> ts) lineOption
-                 sylls = createSyllablesUkrS textP
+--                 sylls = createSyllablesUkrS textP
                  outputS = outputSel lineOption code
                  qqs = readEq4 (mconcat . (if null file then case k of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} else if length syllableDurationsDs >= k then syllableDurationsDs !! (k - 1) else syllableDurationsD2) . createSyllablesUkrS) (map showFS . mconcat . createSyllablesUkrS) . basicSplit $ textP 
                  (breaks, rs) = R.showZerosFor2PeriodMusic qqs

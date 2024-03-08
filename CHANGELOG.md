@@ -212,3 +212,10 @@ possibilities of the program, especially for the music composing.
 
 * Fifteenth version revised C. Some performance improvements. Fixed issue with just one syllable in case of application '=' mode afterwards. Some minor documentation improvements. Switched to containers and minimax as additional dependencies.
 
+## 0.16.0.0 -- 2024-03-08
+
+* Sixteenth version. Added possibility to compare different line options from files. For more information on the idea see: 
+https://oleksandr-zhabenko.github.io/uk/rhythmicity/PhLADiPreLiO.Eng.21.html#comparative-mode-of-operation-c
+
+Some code improvements. 
+ 

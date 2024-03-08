@@ -124,6 +124,8 @@ The version 0.15.0.0 is also devoted to the bright memory of the Artem Sachuk, w
 
 The version 0.15.3.0 is also devoted to Sophie Kok, a sister of Emma Kok, who turned 18 on the 06/01/2024. Besides, on the 22/01/2024 there is Day of Unity of Ukraine and on the 23/01/2024 there is for Orthodox Church memory of St. Paulinus of Nola.
 
+On the 08/03/2024 there is International Women's Day.
+
 All support is welcome, including donations for the needs of the Ukrainian army, IDPs and refugees.
 
 If you would like to share some financial support, please, contact the mentioned foundation
