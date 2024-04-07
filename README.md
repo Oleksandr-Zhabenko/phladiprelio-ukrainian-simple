@@ -77,6 +77,11 @@ The version 0.15.3.0 adds some performance improvements and fixes the issue with
 For the list of bash aliases a few of which are used in the videos, see:
 https://github.com/Oleksandr-Zhabenko/phladiprelio-alias/blob/main/.bashrc
 
+ Breaking changes since 0.20.0.0
+ ===============================
+
+Since the version 0.20.0.0 the way of calculation is significantly changed, therefore the results are expected to be different. Please, have this in mind. It is expected to have larger groups and more options to choose from. Nevertheless, the approach becomes more stable. The performance and resources consumtion are very closely comparable with probably some subtle differences between versions 0.15.* and 0.20.0.0.
+
  Devotion
  ========
 
@@ -125,6 +130,10 @@ The version 0.15.0.0 is also devoted to the bright memory of the Artem Sachuk, w
 The version 0.15.3.0 is also devoted to Sophie Kok, a sister of Emma Kok, who turned 18 on the 06/01/2024. Besides, on the 22/01/2024 there is Day of Unity of Ukraine and on the 23/01/2024 there is for Orthodox Church memory of St. Paulinus of Nola.
 
 On the 08/03/2024 there is International Women's Day.
+
+On the 12/03/2024 there was a Birthday of Emma Kok, the foundation founder. She turned 16. Therefore, the release 0.20.0.0 is additionally devoted i.e. tributed to her.
+
+Besides, you can support Ukrainian people in various forms.
 
 All support is welcome, including donations for the needs of the Ukrainian army, IDPs and refugees.
 

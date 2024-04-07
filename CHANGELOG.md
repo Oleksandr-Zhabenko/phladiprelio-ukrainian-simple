@@ -218,4 +218,8 @@ possibilities of the program, especially for the music composing.
 https://oleksandr-zhabenko.github.io/uk/rhythmicity/PhLADiPreLiO.Eng.21.html#comparative-mode-of-operation-c
 
 Some code improvements. 
- 
+
+ ## 0.20.0.0 -- 2024-04-07
+
+* Twentieth version. Switched to Word8 instead of Double. Made a window to provide in the future possible updates for the Double-related functionality. Updated some important dependencies. Now the results can differ significantly from the earlier ones because the values are calculated in a significantly different way.
+

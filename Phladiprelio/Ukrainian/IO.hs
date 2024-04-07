@@ -4,11 +4,13 @@ module Phladiprelio.Ukrainian.IO where
 
 import GHC.Arr
 import GHC.Base 
+import GHC.Word
 import GHC.Num (Num(..),Integer,(+),(-),(*))
 import GHC.Real (Integral(..),fromIntegral,(/),rem,quotRem,round,(^))
 import GHC.Enum (fromEnum)
 import Text.Show (Show(..))
 import Text.Read (readMaybe)
+import Data.Ord (Down(..)) 
 import Data.Char (isDigit,toLower,isSpace)
 import System.IO (putStrLn, FilePath,stdout,hSetNewlineMode,universalNewlineMode,getLine,appendFile,writeFile,putStr,readFile)
 import qualified Rhythmicity.MarkerSeqs as R --hiding (id)
@@ -17,7 +19,7 @@ import Data.Foldable (mapM_)
 import Data.Maybe (isNothing,fromJust,fromMaybe) 
 import Data.Tuple (fst,snd)
 import Phladiprelio.Ukrainian.Syllable 
-import Phladiprelio.Ukrainian.SyllableDouble
+import Phladiprelio.Ukrainian.SyllableWord8
 import Phladiprelio.Ukrainian.Melodics 
 import GHC.Int (Int8)
 import CaseBi.Arr (getBFst')
@@ -36,9 +38,9 @@ import Phladiprelio.UniquenessPeriodsG
 import Control.Exception
 
 generalF
- :: Int -- ^ A power of 10. 10 in this power is then multiplied the value of distance if the next ['Double'] argument is not empty. The default one is 4. The right values are in the range [2..6].
+ :: Int -- ^ A power of 10. The distance value is quoted by 10 in this power if the next ['Word8'] argument is not empty. The default one is 0. The right values are in the range [0..4].
  -> Int -- ^ A 'length' of the next argument here.
- -> [Double] -- ^ A list of non-negative values normed by 1.0 (the greatest of which is 1.0) that the line options are compared with. If null, then the program works as for version 0.12.1.0 without this newly-introduced argument since the version 0.13.0.0. The length of it must be a least common multiplier of the (number of syllables plus number of \'_digits\' groups) to work correctly. Is not used when the next 'FilePath' and 'String' arguments are not null.
+ -> [Word8] -- ^ A list of non-negative values normed by 255 (the greatest of which is 255) that the line options are compared with. If null, then the program works as for version 0.12.1.0 without this newly-introduced argument since the version 0.13.0.0. The length of it must be a least common multiplier of the (number of syllables plus number of \'_digits\' groups) to work correctly. Is not used when the next 'FilePath' and 'String' arguments are not null.
  -> Bool -- ^ If 'True' then adds \"<br>\" to line endings for double column output
  -> FilePath -- ^ A path to the file to save double columns output to. If empty then just prints to 'stdout'.
  -> String -- ^ If not null than instead of rhythmicity evaluation using hashes and and feets, there is computed a diversity property for the specified 'String' here using the 'selectSounds' function. For more information, see: 'https://oleksandr-zhabenko.github.io/uk/rhythmicity/PhLADiPreLiO.Eng.21.html#types'
@@ -61,15 +63,14 @@ generalF
 generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb file numTest hc (grps,mxms) k descending hashStep emptyline splitting (fs,code) concurrently initstr universalSet@(_:_:_) = do
    syllableDurationsDs <- readSyllableDurations file
    let syllN = countSyll initstr
---       universalSet = map unwords . permutations . words $ rs
        f ldc compards syllableDurationsDs grps mxms -- Since the version 0.12.0.0, has a possibility to evaluate diversity property.
-            | null selStr = (if null compards then (sum . R.countHashes2G hashStep hc grps mxms) else (round . (*10^power10) . distanceSqrG2 ldc compards)) . read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null file then case k of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
+            | null selStr = (if null compards then (sum . R.countHashes2G hashStep hc grps mxms) else ((`quot` 10^power10) . fromIntegral . sumAbsDistNorm compards)) . read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null file then case k of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
                          else  if length syllableDurationsDs >= k then syllableDurationsDs !! (k - 1) else syllableDurationsD2) . createSyllablesUkrS) 
             | otherwise = fromIntegral . diverse2GGL (selectSounds selStr) [100,101] . convertToProperUkrainianI8 . filter (\c -> not (isDigit c) && c /= '_' && c/= '=')
    hSetNewlineMode stdout universalNewlineMode
    if numTest >= 0 && numTest <= 179 && numTest /= 1 && null compards then testsOutput concurrently syllN f ldc syllableDurationsDs numTest universalSet
    else let sRepresent = zipWith (\k (x, ys) -> S k x ys) [1..] . 
-                   (let h1 = if descending then (\(u,w) -> ((-1) * u, w)) else id in sortOn h1) . map (\xss -> (f ldc compards syllableDurationsDs grps mxms xss, xss)) $ universalSet
+                   (if descending then sortOn (\(u,w) -> (Down u, w)) else sortOn id) . map (\xss -> (f ldc compards syllableDurationsDs grps mxms xss, xss)) $ universalSet
             strOutput = (:[]) . halfsplit1G (\(S _ y _) -> y) (if html then "<br>" else "") (jjj splitting) $ sRepresent
                         in do
                              let lns1 = unlines strOutput
@@ -155,7 +156,7 @@ parseLineNumber l1 = do
 {-| 'selectSounds' converts the argument after \"+ul\" command line argument into a list of  Ukrainian sound representations that is used for evaluation of \'uniqueness periods\' properties of the line. Is a modified Phonetic.Languages.Simplified.Array.Ukrainian.FuncRep2RelatedG2.parsey0Choice from the @phonetic-languages-simplified-examples-array-0.21.0.0@ package. 
 -}
 selectSounds :: String -> FlowSound
-selectSounds = f . sort . filter (/= 101) . concatMap g . words . map (\c -> if c  == '.' then ' ' else toLower c)
+selectSounds = f . sortOn id . filter (/= 101) . concatMap g . words . map (\c -> if c  == '.' then ' ' else toLower c)
     where g = getBFst' ([101::Sound8], listArray (0,41) (("1",[1,2,3,4,5,6,7,8,10,15,17,19,21,23,25,27,28,30,32,34,36,38,39,41,43,45,47,49,50,52,54,66]):("sr",[27,28,30,32,34,36]):("vd",[8,10,15,17,19,21,23,25]) :("vs",[45,47,49,50,43,52,38,66,54,39,41]) :("vw",[1..6]) :map (\(k,t) -> (k,[t])) [("\1072",1),("\1073",15),("\1074",36),("\1075",21),("\1076",17),("\1076\1078",23),("\1076\1079",8),("\1077",2),("\1078",10),("\1079",25),("\1080",5),("\1081",27),("\1082",45),("\1083",28),("\1084",30),("\1085",32),("\1086",3),("\1087",47),("\1088",34),("\1089",49),("\1089\1100",54),("\1090",50),("\1091",4),("\1092",43),("\1093",52),("\1094",38),("\1094\1100",66),("\1095",39),("\1096",41),("\1097",55),("\1100",7),("\1102",56),("\1103",57),("\1108",58),("\1110",6),("\1111",59),("\1169",19),("\8217",61)]))
           f (x:ts@(y:_)) 
             | x == y = f ts
@@ -190,10 +191,10 @@ testsOutput concurrently syllN f ldc syllableDurationsDs numTest universalSet = 
 outputWithFile
   :: (Eq a1, Num a1) =>
      String -- ^ If not null than instead of rhythmicity evaluation using hashes and and feets, there is computed a diversity property for the specified 'String' here using the 'selectSounds' function. For more information, see: 'https://oleksandr-zhabenko.github.io/uk/rhythmicity/PhLADiPreLiO.Eng.21.html#types'
-     -> [Double] -- ^ A list of non-negative values normed by 1.0 (the greatest of which is 1.0) that the line options are compared with. If null, then the program works as for version 0.12.1.0 without this newly-introduced argument since the version 0.13.0.0. The length of it must be a least common multiplier of the (number of syllables plus number of \'_digits\' groups) to work correctly. Is not used when the next 'FilePath' and 'String' arguments are not null.
+     -> [Word8] -- ^ A list of non-negative values normed by 255 (the greatest of which is 255) that the line options are compared with. If null, then the program works as for version 0.12.1.0 without this newly-introduced argument since the version 0.13.0.0. The length of it must be a least common multiplier of the (number of syllables plus number of \'_digits\' groups) to work correctly. 
      -> [PhladiprelioUkr]
      -> FilePath -- ^ The file to read the sound representation durations from.
-     -> [[[[Sound8]]] -> [[Double]]]
+     -> [[[[Sound8]]] -> [[Word8]]]
      -> Int
      -> a1
      -> Int
