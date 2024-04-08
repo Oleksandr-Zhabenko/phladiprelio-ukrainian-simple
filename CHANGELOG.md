@@ -226,4 +226,8 @@ Some code improvements.
  ## 0.20.1.0 -- 2024-04-08
 
 * Twentieth version revised A. Fixed issue with phladiprelio-general-datatype as a dependency. Added explicit dependency of deepseq, which is installed by default by GHC installation (therefore, no additional overhead). Some performance and memory usage improvements.
- 
+
+  ## 0.20.2.0 -- 2024-04-08
+
+* Twentieth version revised B. Fixed issue with +l2 ... -l2 group of arguments. Updated the dependency of phladiprelio-general-datatype. Some documentation improvements.
+

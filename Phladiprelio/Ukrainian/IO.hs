@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables #-}
 
 module Phladiprelio.Ukrainian.IO where
 
@@ -117,7 +117,7 @@ generalF _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = let strOutput = ["You have 
     putStrLn . unlines $ strOutput
     return strOutput
 
-data PhladiprelioUkr = S Int Integer String deriving (Eq, NFData, Generic)
+data PhladiprelioUkr = S Int Integer String deriving (Eq)
 
 instance Show PhladiprelioUkr where
   show (S i j xs) = showBignum 7 j `mappend` " " `mappend` xs `mappend` "  " `mappend` showWithSpaces 4 i
