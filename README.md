@@ -80,7 +80,7 @@ https://github.com/Oleksandr-Zhabenko/phladiprelio-alias/blob/main/.bashrc
  Breaking changes since 0.20.0.0
  ===============================
 
-Since the version 0.20.0.0 the way of calculation is significantly changed, therefore the results are expected to be different. Please, have this in mind. It is expected to have larger groups and more options to choose from. Nevertheless, the approach becomes more stable. The performance and resources consumtion are very closely comparable with probably some subtle differences between versions 0.15.* and 0.20.0.0.
+Since the version 0.20.0.0 the way of calculation is significantly changed, therefore the results are expected to be different. Please, have this in mind. It is expected to have larger groups and more options to choose from. Nevertheless, the approach becomes more stable. The performance and resources consumtion are very closely comparable with probably some subtle differences between versions 0.16.* and 0.20.0.0.
 
  Devotion
  ========
@@ -131,7 +131,7 @@ The version 0.15.3.0 is also devoted to Sophie Kok, a sister of Emma Kok, who tu
 
 On the 08/03/2024 there is International Women's Day.
 
-On the 12/03/2024 there was a Birthday of Emma Kok, the foundation founder. She turned 16. Therefore, the release 0.20.0.0 is additionally devoted i.e. tributed to her.
+On the 12/03/2024 there was a Birthday of Emma Kok, the foundation founder. She turned 16. Therefore, the releases 0.20.0.0 and 0.20.1.0 are additionally devoted i.e. tributed to her.
 
 Besides, you can support Ukrainian people in various forms.
 

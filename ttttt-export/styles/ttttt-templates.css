@@ -1,0 +1,46 @@
+/* template for file ttttt */
+
+@namespace context url('http://www.contextgarden.net/context/export') ;
+
+
+/* element="delimited" detail="quotation-1" chain="" */
+
+delimited[detail=quotation-1],
+div.delimited.quotation-1 {
+    display: inline ;
+}
+
+/* element="delimited" detail="quote-1" chain="" */
+
+delimited[detail=quote-1],
+div.delimited.quote-1 {
+    display: inline ;
+}
+
+/* element="delimitedcontent" detail="" chain="" */
+
+delimitedcontent,
+div.delimitedcontent {
+    display: inline ;
+}
+
+/* element="delimitedsymbol" detail="" chain="" */
+
+delimitedsymbol,
+div.delimitedsymbol {
+    display: inline ;
+}
+
+/* element="document" detail="" chain="" */
+
+document,
+div.document {
+    display: block ;
+}
+
+/* element="link" detail="" chain="" */
+
+link,
+div.link {
+    display: inline ;
+}

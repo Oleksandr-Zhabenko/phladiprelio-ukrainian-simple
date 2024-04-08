@@ -223,3 +223,7 @@ Some code improvements.
 
 * Twentieth version. Switched to Word8 instead of Double. Made a window to provide in the future possible updates for the Double-related functionality. Updated some important dependencies. Now the results can differ significantly from the earlier ones because the values are calculated in a significantly different way.
 
+ ## 0.20.1.0 -- 2024-04-08
+
+* Twentieth version revised A. Fixed issue with phladiprelio-general-datatype as a dependency. Added explicit dependency of deepseq, which is installed by default by GHC installation (therefore, no additional overhead). Some performance and memory usage improvements.
+ 

@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude, ScopedTypeVariables, DeriveGeneric, DeriveAnyClass #-}
 
 module Phladiprelio.Ukrainian.IO where
 
@@ -7,6 +7,7 @@ import GHC.Base
 import GHC.Word
 import GHC.Num (Num(..),Integer,(+),(-),(*))
 import GHC.Real (Integral(..),fromIntegral,(/),rem,quotRem,round,(^))
+import GHC.Generics
 import GHC.Enum (fromEnum)
 import Text.Show (Show(..))
 import Text.Read (readMaybe)
@@ -36,6 +37,7 @@ import Phladiprelio.General.Datatype3
 import Phladiprelio.General.Distance
 import Phladiprelio.UniquenessPeriodsG
 import Control.Exception
+import Control.DeepSeq  
 
 generalF
  :: Int -- ^ A power of 10. The distance value is quoted by 10 in this power if the next ['Word8'] argument is not empty. The default one is 0. The right values are in the range [0..4].
@@ -71,7 +73,7 @@ generalF power10 ldc compards html dcfile selStr (prestr, poststr) lineNmb file 
    if numTest >= 0 && numTest <= 179 && numTest /= 1 && null compards then testsOutput concurrently syllN f ldc syllableDurationsDs numTest universalSet
    else let sRepresent = zipWith (\k (x, ys) -> S k x ys) [1..] . 
                    (if descending then sortOn (\(u,w) -> (Down u, w)) else sortOn id) . map (\xss -> (f ldc compards syllableDurationsDs grps mxms xss, xss)) $ universalSet
-            strOutput = (:[]) . halfsplit1G (\(S _ y _) -> y) (if html then "<br>" else "") (jjj splitting) $ sRepresent
+            strOutput = force . (:[]) . halfsplit1G (\(S _ y _) -> y) (if html then "<br>" else "") (jjj splitting) $ sRepresent
                         in do
                              let lns1 = unlines strOutput
                              putStrLn lns1
@@ -115,7 +117,7 @@ generalF _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ = let strOutput = ["You have 
     putStrLn . unlines $ strOutput
     return strOutput
 
-data PhladiprelioUkr = S Int Integer String deriving Eq
+data PhladiprelioUkr = S Int Integer String deriving (Eq, NFData, Generic)
 
 instance Show PhladiprelioUkr where
   show (S i j xs) = showBignum 7 j `mappend` " " `mappend` xs `mappend` "  " `mappend` showWithSpaces 4 i
@@ -180,7 +182,7 @@ testsOutput concurrently syllN f ldc syllableDurationsDs numTest universalSet = 
           then mapConcurrently
           else mapM) (\(q,qs) -> 
                           let m = stat1 syllN (q,qs)
-                              (min1, max1) = fromJust . minMax11By (comparing (f ldc [] syllableDurationsDs q qs)) $ universalSet 
+                              (min1, max1) = force . fromJust . minMax11By (comparing (f ldc [] syllableDurationsDs q qs)) $ universalSet 
                               mx = f ldc [] syllableDurationsDs q qs max1 
                               strTest = (show (fromEnum q) `mappend` "   |   " `mappend`  show mx `mappend` "     " `mappend` show m `mappend` "  -> " `mappend` 
                                   showFFloat (Just 3) (100 * fromIntegral mx / fromIntegral m) "%" `mappend` (if rem numTest 10 >= 4 

@@ -30,6 +30,7 @@ import Phladiprelio.Ukrainian.Syllable
 import Phladiprelio.Ukrainian.SyllableWord8
 import Phladiprelio.Ukrainian.ReadDurations
 import Data.ChooseLine
+import Control.DeepSeq (force) 
 
 main :: IO ()
 main = do
@@ -107,18 +108,18 @@ main = do
     let line2comparewith 
           | oneC "+l2" argsC || null linecomp3 = unwords . getC "+l2" $ argsC
           | otherwise = linecomp3
-        basecomp = read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
-                           else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) line2comparewith
+        basecomp = force . read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
+                           else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) $ line2comparewith
  
-        example = read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
-                           else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) (unwords arg3s)
+        example = force . read3 (not . null . filter (not . isSpace)) 1.0 (mconcat . (if null fileDu then case sylD of { 1 -> syllableDurationsD; 2 -> syllableDurationsD2; 3 -> syllableDurationsD3; 4 -> syllableDurationsD4} 
+                           else  if length syllableDurationsDs >= sylD then syllableDurationsDs !! (sylD - 1) else syllableDurationsD2) . createSyllablesUkrS) $ (unwords arg3s)
         le = length example
         lb = length basecomp
         gcd1 = gcd le lb
         ldc = (le * lb) `quot` gcd1
         mulp = ldc `quot` lb
 --        max2 = maximum basecomp
-        compards = concatMap (replicate mulp) basecomp
+        compards = force . concatMap (replicate mulp) $ basecomp
         (filesave,codesave)  
           | null filedata = ("",-1)
           | length filedata == 2 = (head filedata, fromMaybe 0 (readMaybe (last filedata)::Maybe Int))
@@ -131,7 +132,7 @@ main = do
           | null argCs = genPermutationsL l
           | otherwise = decodeLConstraints argCs . genPermutationsL $ l 
         descending = oneA "+n" argsA
-        variants1 = uniquenessVariants2GNBL ' ' id id id perms ll
+        variants1 = force . uniquenessVariants2GNBL ' ' id id id perms $ ll
     if helpMessage then do 
       hSetNewlineMode stdout universalNewlineMode
       helpPrint helpArg
