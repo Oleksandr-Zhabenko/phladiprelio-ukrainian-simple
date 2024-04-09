@@ -131,7 +131,7 @@ The version 0.15.3.0 is also devoted to Sophie Kok, a sister of Emma Kok, who tu
 
 On the 08/03/2024 there is International Women's Day.
 
-On the 12/03/2024 there was a Birthday of Emma Kok, the foundation founder. She turned 16. Therefore, the releases 0.20.0.0, 0.20.1.0 and 0.20.2.0 are additionally devoted i.e. tributed to her.
+On the 12/03/2024 there was a Birthday of Emma Kok, the foundation founder. She turned 16. Therefore, the releases 0.20.0.0, 0.20.1.0, 0.20.2.0 and 0.20.2.1 are additionally devoted i.e. tributed to her.
 
 Besides, you can support Ukrainian people in various forms.
 

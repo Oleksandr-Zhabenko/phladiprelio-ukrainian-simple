@@ -231,3 +231,7 @@ Some code improvements.
 
 * Twentieth version revised B. Fixed issue with +l2 ... -l2 group of arguments. Updated the dependency of phladiprelio-general-datatype. Some documentation improvements.
 
+  ## 0.20.2.1 -- 2024-04-09
+
+* Twentieth version revised C. Fixed issue with documentation in music mode of operation. 
+
