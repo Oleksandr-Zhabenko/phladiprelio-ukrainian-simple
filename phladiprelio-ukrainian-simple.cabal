@@ -1,6 +1,6 @@
 cabal-version:      2.4
 name:               phladiprelio-ukrainian-simple
-version:            0.20.2.1
+version:            0.20.2.2
 
 -- A short (one-line) description of the package.
 synopsis:           A PhLADiPreLiO implementation for Ukrainian that uses hashes and asynchronous concurrency.

@@ -219,19 +219,23 @@ https://oleksandr-zhabenko.github.io/uk/rhythmicity/PhLADiPreLiO.Eng.21.html#com
 
 Some code improvements. 
 
- ## 0.20.0.0 -- 2024-04-07
+## 0.20.0.0 -- 2024-04-07
 
 * Twentieth version. Switched to Word8 instead of Double. Made a window to provide in the future possible updates for the Double-related functionality. Updated some important dependencies. Now the results can differ significantly from the earlier ones because the values are calculated in a significantly different way.
 
- ## 0.20.1.0 -- 2024-04-08
+## 0.20.1.0 -- 2024-04-08
 
 * Twentieth version revised A. Fixed issue with phladiprelio-general-datatype as a dependency. Added explicit dependency of deepseq, which is installed by default by GHC installation (therefore, no additional overhead). Some performance and memory usage improvements.
 
-  ## 0.20.2.0 -- 2024-04-08
+## 0.20.2.0 -- 2024-04-08
 
 * Twentieth version revised B. Fixed issue with +l2 ... -l2 group of arguments. Updated the dependency of phladiprelio-general-datatype. Some documentation improvements.
 
-  ## 0.20.2.1 -- 2024-04-09
+## 0.20.2.1 -- 2024-04-09
 
 * Twentieth version revised C. Fixed issue with documentation in music mode of operation. 
+
+## 0.20.2.2 -- 2024-04-10
+
+* Twentieth version revised D. Provided Generic and NFData instances for PladiprelioUkr datatype. This fixed issue with being not loadable in GHCi.
 
